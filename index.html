@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DiabFree — Reverse Type 2 Diabetes Through Food</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --green-deep:#1a4a2e;
+  --green-mid:#2d6a4f;
+  --green-light:#52b788;
+  --green-pale:#d8f3dc;
+  --green-soft:#e8f5e9;
+  --cream:#faf7f2;
+  --cream-dark:#f0ebe0;
+  --cream-card:#fffdf9;
+  --gold:#c9a84c;
+  --gold-pale:#fdf3d8;
+  --white:#ffffff;
+  --text-dark:#1a2e1e;
+  --text-mid:#4a5e50;
+  --text-light:#8a9e90;
+  --border:#e0ead8;
+}
+
+body{font-family:'Lato',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh;overflow-x:hidden;}
+
+/* ─── SCREENS ─────────────────────────── */
+.screen{display:none;min-height:100vh;flex-direction:column;align-items:center;justify-content:flex-start;padding:32px 20px 48px;background:var(--cream);position:relative;overflow:hidden;}
+.screen.active{display:flex;animation:fadeUp .35s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.screen::before{content:'';position:fixed;top:-200px;right:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(82,183,136,.1),transparent 70%);pointer-events:none;}
+.screen::after{content:'';position:fixed;bottom:-200px;left:-200px;width:440px;height:440px;background:radial-gradient(circle,rgba(201,168,76,.07),transparent 70%);pointer-events:none;}
+
+/* ─── LOGO ───────────────────────────── */
+.logo-wrap{margin-bottom:24px;display:flex;justify-content:center;}
+.logo-sm{width:130px;height:36px;}
+
+/* ─── PROGRESS ───────────────────────── */
+.progress-wrap{width:100%;max-width:520px;margin-bottom:24px;}
+.progress-label{font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:var(--text-light);text-align:right;margin-bottom:6px;letter-spacing:.3px;}
+.progress-track{height:4px;background:var(--cream-dark);border-radius:99px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--green-mid),var(--green-light));border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+
+/* ─── CARD ───────────────────────────── */
+.card{background:var(--cream-card);border-radius:22px;padding:36px 32px;width:100%;max-width:520px;box-shadow:0 4px 40px rgba(26,74,46,.08),0 1px 3px rgba(0,0,0,.04);border:1px solid var(--border);}
+.q-title{font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--green-deep);line-height:1.25;margin-bottom:6px;letter-spacing:-.4px;text-align:center;}
+.q-hint{font-size:13px;color:var(--text-light);margin-bottom:24px;text-align:center;}
+
+/* ─── OPTIONS ────────────────────────── */
+.options{display:flex;flex-direction:column;gap:10px;}
+.opt{display:flex;align-items:center;gap:14px;padding:14px 18px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;transition:all .18s ease;background:var(--cream);font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--text-dark);user-select:none;}
+.opt:hover{border-color:var(--green-light);background:var(--green-pale);transform:translateX(3px);}
+.opt.sel{border-color:var(--green-mid);background:var(--green-pale);color:var(--green-deep);}
+.opt-radio{width:20px;height:20px;border:2px solid #c8d8c0;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .18s;}
+.opt.sel .opt-radio{border-color:var(--green-mid);background:var(--green-mid);}
+.opt.sel .opt-radio::after{content:'';width:7px;height:7px;background:white;border-radius:50%;}
+
+/* ─── PERSONA ────────────────────────── */
+.persona-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:520px;}
+.persona-card{border:2px solid var(--border);border-radius:18px;overflow:hidden;cursor:pointer;background:var(--cream-card);transition:all .2s ease;text-align:center;}
+.persona-card:hover{border-color:var(--green-light);transform:translateY(-3px);box-shadow:0 8px 24px rgba(26,74,46,.1);}
+.persona-img{width:100%;height:130px;display:flex;align-items:center;justify-content:center;font-size:64px;background:var(--green-soft);}
+.persona-label{background:var(--green-mid);color:white;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;padding:12px;display:flex;align-items:center;justify-content:space-between;}
+
+/* ─── AGE OPTIONS ────────────────────── */
+.age-options{display:flex;flex-direction:column;gap:10px;}
+.age-opt{padding:16px 20px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;transition:all .18s ease;background:var(--cream);font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;color:var(--text-dark);user-select:none;text-align:left;}
+.age-opt:hover{border-color:var(--green-light);background:var(--green-pale);}
+.age-opt.sel{border-color:var(--green-mid);background:var(--green-pale);color:var(--green-deep);}
+
+/* ─── BUTTONS ────────────────────────── */
+.btn-primary{width:100%;margin-top:24px;padding:15px;background:var(--green-deep);color:white;border:none;border-radius:14px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:all .2s ease;}
+.btn-primary:hover{background:var(--green-mid);transform:translateY(-2px);box-shadow:0 10px 28px rgba(26,74,46,.22);}
+.btn-primary:active{transform:translateY(0);}
+.btn-back{background:none;border:none;color:var(--text-light);font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px;display:block;width:100%;text-align:center;padding:8px;transition:color .2s;}
+.btn-back:hover{color:var(--text-mid);}
+.err{color:#c0392b;font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;margin-top:8px;display:none;}
+
+/* ─── FIELDS ─────────────────────────── */
+.field-group{display:flex;flex-direction:column;gap:16px;}
+.field-label{font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;color:var(--text-mid);margin-bottom:6px;display:block;letter-spacing:.7px;text-transform:uppercase;}
+.field-input{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:14px;font-family:'Lato',sans-serif;font-size:15px;color:var(--text-dark);background:var(--cream);transition:all .2s;outline:none;}
+.field-input:focus{border-color:var(--green-light);background:white;box-shadow:0 0 0 4px rgba(82,183,136,.1);}
+.field-input::placeholder{color:#b8c8b0;}
+
+/* ─── TRUST STRIP ─────────────────────── */
+.trust-strip{display:flex;justify-content:center;gap:24px;margin-top:20px;flex-wrap:wrap;}
+.ts-item{display:flex;align-items:center;gap:6px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:600;color:var(--text-light);}
+.ts-dot{width:5px;height:5px;background:var(--green-light);border-radius:50%;}
+
+/* ─── LOADER ─────────────────────────── */
+.loader-title{font-family:'Nunito',sans-serif;font-size:24px;font-weight:800;color:var(--green-deep);text-align:center;line-height:1.25;}
+.loader-title span{color:var(--green-light);}
+.loader-steps{display:flex;flex-direction:column;gap:0;margin:24px 0 28px;background:var(--cream-card);border-radius:16px;border:1px solid var(--border);overflow:hidden;}
+.loader-step{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);gap:12px;}
+.loader-step:last-child{border-bottom:none;}
+.loader-step-name{font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--text-dark);}
+.step-right{display:flex;align-items:center;gap:8px;min-width:80px;justify-content:flex-end;}
+.step-pct{font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--text-light);}
+.step-bar{width:80px;height:4px;background:var(--cream-dark);border-radius:99px;overflow:hidden;}
+.step-fill{height:100%;background:linear-gradient(90deg,var(--green-mid),var(--green-light));border-radius:99px;width:0;transition:width 1.2s ease;}
+.step-check{width:22px;height:22px;background:var(--green-mid);border-radius:50%;display:none;align-items:center;justify-content:center;color:white;font-size:12px;flex-shrink:0;}
+.review-card{background:var(--cream-card);border:1px solid var(--border);border-radius:16px;padding:20px;}
+.stars{color:var(--green-mid);font-size:18px;margin-bottom:10px;letter-spacing:2px;}
+.review-title{font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;color:var(--text-dark);margin-bottom:6px;}
+.review-body{font-size:13px;color:var(--text-mid);line-height:1.6;}
+.review-author{font-size:12px;color:var(--text-light);margin-top:8px;font-weight:700;}
+
+/* ─── CHART ──────────────────────────── */
+.chart-bars{display:flex;align-items:flex-end;gap:8px;height:160px;padding:0 8px;margin-bottom:8px;}
+.bar{flex:1;border-radius:8px 8px 0 0;position:relative;}
+.bar-goal-tag{position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:var(--green-mid);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;padding:4px 10px;border-radius:99px;white-space:nowrap;}
+.chart-months{display:flex;gap:8px;padding:0 8px;}
+.chart-month{flex:1;text-align:center;font-size:11px;color:var(--text-light);font-weight:600;}
+
+/* ─── SCRATCH ────────────────────────── */
+.scratch-card{width:100%;border-radius:18px;background:linear-gradient(135deg,#f0c040,#e8a820);padding:36px 24px;cursor:pointer;position:relative;overflow:hidden;margin-bottom:20px;box-shadow:0 6px 24px rgba(201,168,76,.25);}
+.scratch-overlay{position:absolute;inset:0;background:linear-gradient(135deg,#d4a020,#c8901a);display:flex;align-items:center;justify-content:center;transition:opacity .5s ease;border-radius:18px;}
+.scratch-overlay-text{font-family:'Nunito',sans-serif;font-size:16px;font-weight:800;color:rgba(255,255,255,.9);}
+.scratch-pct{font-family:'Nunito',sans-serif;font-size:56px;font-weight:800;color:var(--green-deep);line-height:1;text-align:center;}
+.scratch-off{font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--green-mid);text-align:center;}
+.scratch-detail{font-size:13px;color:var(--text-mid);margin-top:4px;text-align:center;}
+
+/* ─── CONFETTI ───────────────────────── */
+.confetti-wrap{position:fixed;inset:0;pointer-events:none;z-index:99;display:none;}
+.cp{position:absolute;width:8px;height:8px;border-radius:2px;animation:cf 2s ease-in forwards;}
+@keyframes cf{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+/* ─── THANK YOU ──────────────────────── */
+#s12{background:var(--green-deep);}
+#s12::before{background:radial-gradient(circle,rgba(82,183,136,.12),transparent 70%);}
+#s12::after{background:radial-gradient(circle,rgba(201,168,76,.08),transparent 70%);}
+
+.ty-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(82,183,136,.15);border:1px solid rgba(82,183,136,.3);border-radius:99px;padding:8px 18px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--green-light);margin-bottom:20px;}
+.ty-check{width:20px;height:20px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green-deep);font-size:11px;font-weight:900;}
+.ty-title{font-family:'Nunito',sans-serif;font-size:clamp(28px,5vw,42px);font-weight:800;color:white;line-height:1.15;margin-bottom:14px;letter-spacing:-.5px;}
+.ty-title em{font-style:normal;color:var(--green-light);}
+.ty-sub{font-size:16px;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:20px;max-width:480px;}
+.ty-gift{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);border-radius:14px;padding:14px 20px;margin-bottom:28px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;color:rgba(255,255,255,.7);line-height:1.65;}
+.ty-gift strong{color:#c9a84c;}
+.waitlist-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:36px;}
+.av-stack{display:flex;}
+.av{width:32px;height:32px;border-radius:50%;border:2px solid var(--green-deep);background:var(--green-mid);display:flex;align-items:center;justify-content:center;font-size:14px;margin-left:-8px;}
+.av:first-child{margin-left:0;}
+.wl-text{font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;color:rgba(255,255,255,.5);}
+.wl-text strong{color:rgba(255,255,255,.9);}
+.section-label{font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:16px;}
+.features-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left;margin-bottom:32px;}
+.feat-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:18px;transition:all .25s ease;}
+.feat-card:hover{background:rgba(82,183,136,.06);border-color:rgba(82,183,136,.18);transform:translateY(-2px);}
+.feat-icon{font-size:22px;margin-bottom:8px;display:block;}
+.feat-title{font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:white;margin-bottom:4px;}
+.feat-desc{font-size:12px;color:rgba(255,255,255,.4);line-height:1.5;}
+.feat-tag{display:inline-block;background:rgba(82,183,136,.15);color:var(--green-light);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;margin-top:8px;text-transform:uppercase;letter-spacing:.3px;}
+.stat-row{display:flex;justify-content:center;gap:40px;border-top:1px solid rgba(255,255,255,.08);padding-top:32px;flex-wrap:wrap;}
+.stat-item{text-align:center;}
+.stat-num{font-family:'Nunito',sans-serif;font-size:36px;font-weight:800;color:var(--green-light);display:block;line-height:1;margin-bottom:6px;}
+.stat-lbl{font-size:12px;color:rgba(255,255,255,.3);line-height:1.5;}
+
+@media(max-width:500px){
+  .card{padding:24px 16px;}
+  .features-grid{grid-template-columns:1fr;}
+  .persona-grid{gap:10px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════
+  S1 — PERSONA SELECTOR
+════════════════════════════════ -->
+<div class="screen active" id="s1">
+  <div class="logo-wrap">
+    <svg width="160" height="44" viewBox="0 0 160 44" fill="none">
+      <rect width="44" height="44" rx="13" fill="#1a4a2e"/>
+      <path d="M22 9C22 9 13 20.5 13 26.5C13 31.194 17.029 35 22 35C26.971 35 31 31.194 31 26.5C31 20.5 22 9 22 9Z" fill="#52b788"/>
+      <ellipse cx="18.5" cy="24" rx="2.2" ry="4" fill="white" opacity="0.2" transform="rotate(-10 18.5 24)"/>
+      <path d="M19 30L22 26L25 30" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/>
+      <line x1="22" y1="26" x2="22" y2="21" stroke="white" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/>
+      <text x="54" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#1a4a2e">Diab</text>
+      <text x="101" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#52b788">Free</text>
+    </svg>
+  </div>
+  <div style="text-align:center;max-width:520px;width:100%;margin-bottom:28px;">
+    <div style="font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green-light);margin-bottom:12px;">3-Minute Quiz</div>
+    <h1 style="font-family:'Nunito',sans-serif;font-size:clamp(22px,4.5vw,32px);font-weight:800;color:var(--green-deep);line-height:1.2;margin-bottom:10px;letter-spacing:-.4px;">A Personalized <span style="color:var(--green-light)">Diabetes Reversal</span> Plan</h1>
+    <p style="font-size:14px;color:var(--text-mid);line-height:1.6;">Answer a few questions and get your plan — backed by clinical research.</p>
+  </div>
+  <div class="persona-grid">
+    <div class="persona-card" onclick="goTo('s2')">
+      <div class="persona-img">🧑</div>
+      <div class="persona-label">Male <span>›</span></div>
+    </div>
+    <div class="persona-card" onclick="goTo('s2')">
+      <div class="persona-img">👩</div>
+      <div class="persona-label">Female <span>›</span></div>
+    </div>
+  </div>
+  <p style="font-size:11px;color:var(--text-light);text-align:center;margin-top:16px;max-width:380px;line-height:1.6;">By continuing you agree to our <a href="#" style="color:var(--green-mid)">Terms of Use</a>, <a href="#" style="color:var(--green-mid)">Privacy Policy</a> and <a href="#" style="color:var(--green-mid)">Cookie Policy</a>.</p>
+</div>
+
+
+<!-- ════════════════════════════════
+  S2 — AGE
+════════════════════════════════ -->
+<div class="screen" id="s2">
+  <div class="logo-wrap"><svg class="logo-sm" viewBox="0 0 160 44" fill="none"><rect width="44" height="44" rx="13" fill="#1a4a2e"/><path d="M22 9C22 9 13 20.5 13 26.5C13 31.194 17.029 35 22 35C26.971 35 31 31.194 31 26.5C31 20.5 22 9 22 9Z" fill="#52b788"/><path d="M19 30L22 26L25 30" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/><line x1="22" y1="26" x2="22" y2="21" stroke="white" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/><text x="54" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#1a4a2e">Diab</text><text x="101" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#52b788">Free</text></svg></div>
+  <div class="progress-wrap">
+    <div class="progress-label">Question 1 of 5</div>
+    <div class="progress-track"><div class="progress-fill" style="width:20%"></div></div>
+  </div>
+  <div class="card">
+    <div class="q-title">What's your age?</div>
+    <div class="q-hint">We only use your age to personalise your plan</div>
+    <div class="age-options" id="opts-s2">
+      <div class="age-opt" onclick="selectAge(this,'s3')">18–24</div>
+      <div class="age-opt" onclick="selectAge(this,'s3')">25–34</div>
+      <div class="age-opt" onclick="selectAge(this,'s3')">35–44</div>
+      <div class="age-opt" onclick="selectAge(this,'s3')">45–54</div>
+      <div class="age-opt" onclick="selectAge(this,'s3')">55–64</div>
+      <div class="age-opt" onclick="selectAge(this,'s3')">65+</div>
+    </div>
+    <button class="btn-back" onclick="goTo('s1')">← Back</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+  S3 — Q1: DIABETES TYPE
+════════════════════════════════ -->
+<div class="screen" id="s3">
+  <div class="logo-wrap"><svg class="logo-sm" viewBox="0 0 160 44" fill="none"><rect width="44" height="44" rx="13" fill="#1a4a2e"/><path d="M22 9C22 9 13 20.5 13 26.5C13 31.194 17.029 35 22 35C26.971 35 31 31.194 31 26.5C31 20.5 22 9 22 9Z" fill="#52b788"/><path d="M19 30L22 26L25 30" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/><line x1="22" y1="26" x2="22" y2="21" stroke="white" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/><text x="54" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#1a4a2e">Diab</text><text x="101" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#52b788">Free</text></svg></div>
+  <div class="progress-wrap">
+    <div class="progress-label">Question 2 of 5</div>
+    <div class="progress-track"><div class="progress-fill" style="width:40%"></div></div>
+  </div>
+  <div class="card">
+    <div class="q-title">Which best describes you?</div>
+    <div class="q-hint">We'll use this to personalise your plan</div>
+    <div class="options" id="opts-s3">
+      <label class="opt"><span class="opt-radio"></span>I have Type 2 diabetes</label>
+      <label class="opt"><span class="opt-radio"></span>I have Type 1 diabetes</label>
+      <label class="opt"><span class="opt-radio"></span>I'm pre-diabetic</label>
+      <label class="opt"><span class="opt-radio"></span>I want to prevent diabetes</label>
+      <label class="opt"><span class="opt-radio"></span>I help someone who has diabetes</label>
+    </div>
+    <div class="err" id="err-s3">Please select an option to continue.</div>
+    <button class="btn-primary" onclick="validateOpts('s3','s4')">Continue →</button>
+    <button class="btn-back" onclick="goTo('s2')">← Back</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+  S4 — Q2: BIGGEST CHALLENGE
+════════════════════════════════ -->
+<div class="screen" id="s4">
+  <div class="logo-wrap"><svg class="logo-sm" viewBox="0 0 160 44" fill="none"><rect width="44" height="44" rx="13" fill="#1a4a2e"/><path d="M22 9C22 9 13 20.5 13 26.5C13 31.194 17.029 35 22 35C26.971 35 31 31.194 31 26.5C31 20.5 22 9 22 9Z" fill="#52b788"/><path d="M19 30L22 26L25 30" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/><line x1="22" y1="26" x2="22" y2="21" stroke="white" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/><text x="54" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#1a4a2e">Diab</text><text x="101" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#52b788">Free</text></svg></div>
+  <div class="progress-wrap">
+    <div class="progress-label">Question 3 of 5</div>
+    <div class="progress-track"><div class="progress-fill" style="width:60%"></div></div>
+  </div>
+  <div class="card">
+    <div class="q-title">What's your biggest challenge managing diabetes?</div>
+    <div class="q-hint">Pick the one that resonates most</div>
+    <div class="options" id="opts-s4">
+      <label class="opt"><span class="opt-radio"></span>I don't know what to eat</label>
+      <label class="opt"><span class="opt-radio"></span>I forget to track my blood sugar</label>
+      <label class="opt"><span class="opt-radio"></span>My diet feels boring and restrictive</label>
+      <label class="opt"><span class="opt-radio"></span>I don't see progress despite trying</label>
+    </div>
+    <div class="err" id="err-s4">Please select an option to continue.</div>
+    <button class="btn-primary" onclick="validateOpts('s4','s5')">Continue →</button>
+    <button class="btn-back" onclick="goTo('s3')">← Back</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+  S5 — TRUST BUILDER
+════════════════════════════════ -->
+<div class="screen" id="s5">
+  <div class="logo-wrap"><svg class="logo-sm" viewBox="0 0 160 44" fill="none"><rect width="44" height="44" rx="13" fill="#1a4a2e"/><path d="M22 9C22 9 13 20.5 13 26.5C13 31.194 17.029 35 22 35C26.971 35 31 31.194 31 26.5C31 20.5 22 9 22 9Z" fill="#52b788"/><path d="M19 30L22 26L25 30" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/><line x1="22" y1="26" x2="22" y2="21" stroke="white" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/><text x="54" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#1a4a2e">Diab</text><text x="101" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#52b788">Free</text></svg></div>
+  <div style="width:100%;max-width:520px;">
+    <h2 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--green-deep);text-align:center;line-height:1.3;margin-bottom:8px;">DiabFree is built on<br>evidence-based clinical research</h2>
+    <p style="font-size:14px;color:var(--text-mid);text-align:center;margin-bottom:28px;">Your plan is based on decades of peer-reviewed science</p>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">
+      <div style="background:var(--cream-card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;">
+        <div style="font-family:'Nunito',sans-serif;font-size:18px;font-weight:800;color:var(--green-deep);letter-spacing:1px;">DiRECT Trial</div>
+        <div style="font-size:12px;color:var(--text-light);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;">University of Newcastle &amp; Glasgow</div>
+      </div>
+      <div style="background:var(--cream-card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;">
+        <div style="font-family:'Nunito',sans-serif;font-size:18px;font-weight:800;color:var(--green-deep);letter-spacing:1px;">NHS</div>
+        <div style="font-size:12px;color:var(--text-light);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;">National T2D Remission Pathway</div>
+      </div>
+      <div style="background:var(--cream-card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;">
+        <div style="font-family:'Nunito',sans-serif;font-size:18px;font-weight:800;color:var(--green-deep);letter-spacing:1px;">Harvard Medical School</div>
+        <div style="font-size:12px;color:var(--text-light);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;">Nutrition &amp; Metabolic Research</div>
+      </div>
+    </div>
+    <button class="btn-primary" style="margin-top:0;" onclick="goTo('s6')">Continue →</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+  S6 — CONTACT: NAME + EMAIL
+════════════════════════════════ -->
+<div class="screen" id="s6">
+  <div class="logo-wrap"><svg class="logo-sm" viewBox="0 0 160 44" fill="none"><rect width="44" height="44" rx="13" fill="#1a4a2e"/><path d="M22 9C22 9 13 20.5 13 26.5C13 31.194 17.029 35 22 35C26.971 35 31 31.194 31 26.5C31 20.5 22 9 22 9Z" fill="#52b788"/><path d="M19 30L22 26L25 30" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/><line x1="22" y1="26" x2="22" y2="21" stroke="white" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/><text x="54" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#1a4a2e">Diab</text><text x="101" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#52b788">Free</text></svg></div>
+  <div class="progress-wrap">
+    <div class="progress-label">Question 4 of 5</div>
+    <div class="progress-track"><div class="progress-fill" style="width:80%"></div></div>
+  </div>
+  <div class="card">
+    <div class="q-title">Where should we send your plan?</div>
+    <div class="q-hint">We'll notify you the moment DiabFree launches</div>
+    <div class="field-group">
+      <div>
+        <label class="field-label">Your name</label>
+        <input type="text" class="field-input" id="inp-name" placeholder="e.g. Sarah Johnson"/>
+      </div>
+      <div>
+        <label class="field-label">Email address</label>
+        <input type="email" class="field-input" id="inp-email" placeholder="e.g. sarah@email.com"/>
+      </div>
+    </div>
+    <div class="err" id="err-s6">Please enter your name and a valid email address.</div>
+    <button class="btn-primary" onclick="validateContact()">Continue →</button>
+    <button class="btn-back" onclick="goTo('s5')">← Back</button>
+  </div>
+  <div class="trust-strip" style="max-width:520px;width:100%;">
+    <div class="ts-item"><span class="ts-dot"></span>No spam, ever</div>
+    <div class="ts-item"><span class="ts-dot"></span>Free to join</div>
+    <div class="ts-item"><span class="ts-dot"></span>Unsubscribe anytime</div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+  S7 — EXPERT REVIEW
+════════════════════════════════ -->
+<div class="screen" id="s7">
+  <div class="logo-wrap"><svg class="logo-sm" viewBox="0 0 160 44" fill="none"><rect width="44" height="44" rx="13" fill="#1a4a2e"/><path d="M22 9C22 9 13 20.5 13 26.5C13 31.194 17.029 35 22 35C26.971 35 31 31.194 31 26.5C31 20.5 22 9 22 9Z" fill="#52b788"/><path d="M19 30L22 26L25 30" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/><line x1="22" y1="26" x2="22" y2="21" stroke="white" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/><text x="54" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#1a4a2e">Diab</text><text x="101" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#52b788">Free</text></svg></div>
+  <div style="width:100%;max-width:520px;">
+    <div style="text-align:center;margin-bottom:20px;height:90px;display:flex;align-items:center;justify-content:center;position:relative;">
+      <div style="font-size:52px;">🧠</div>
+      <div style="position:absolute;top:4px;left:16px;background:var(--cream-card);border:1px solid var(--border);border-radius:99px;padding:6px 14px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:var(--text-dark);">Glucose</div>
+      <div style="position:absolute;top:4px;right:16px;background:var(--cream-card);border:1px solid var(--border);border-radius:99px;padding:6px 14px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:var(--text-dark);">Insulin</div>
+      <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);background:var(--cream-card);border:1px solid var(--border);border-radius:99px;padding:6px 14px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:var(--text-dark);">Diet</div>
+    </div>
+    <h2 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--green-deep);text-align:center;margin-bottom:8px;">Your plan will be reviewed by <span style="color:var(--green-light)">an expert</span></h2>
+    <p style="font-size:13px;color:var(--text-mid);text-align:center;font-style:italic;line-height:1.6;margin-bottom:20px;max-width:380px;margin-left:auto;margin-right:auto;">"DiabFree uses a clinically-grounded approach to provide personalised meal guidance that supports blood sugar reversal."</p>
+    <div style="background:var(--green-pale);border:1px solid rgba(82,183,136,.3);border-radius:14px;padding:16px 20px;margin-bottom:24px;">
+      <div style="font-size:11px;font-weight:700;color:var(--green-mid);letter-spacing:1px;text-transform:uppercase;text-align:center;margin-bottom:12px;">Content reviewed by an expert</div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--green-mid);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">👩‍⚕️</div>
+        <div>
+          <div style="font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;color:var(--green-deep);">Dr. Priya Mehta</div>
+          <div style="font-size:12px;color:var(--text-mid);">Registered Dietitian &amp; Diabetes Educator</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary" style="margin-top:0;" onclick="goTo('s8')">Continue →</button>
+    <button class="btn-back" onclick="goTo('s6')">← Back</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+  S8 — Q5: WILLINGNESS TO PAY
+════════════════════════════════ -->
+<div class="screen" id="s8">
+  <div class="logo-wrap"><svg class="logo-sm" viewBox="0 0 160 44" fill="none"><rect width="44" height="44" rx="13" fill="#1a4a2e"/><path d="M22 9C22 9 13 20.5 13 26.5C13 31.194 17.029 35 22 35C26.971 35 31 31.194 31 26.5C31 20.5 22 9 22 9Z" fill="#52b788"/><path d="M19 30L22 26L25 30" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/><line x1="22" y1="26" x2="22" y2="21" stroke="white" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/><text x="54" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#1a4a2e">Diab</text><text x="101" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#52b788">Free</text></svg></div>
+  <div class="progress-wrap">
+    <div class="progress-label">Question 5 of 5</div>
+    <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+  </div>
+  <div class="card">
+    <div class="q-title">If DiabFree gave you a personalised plan proven to lower your blood sugar — how much would you pay per month?</div>
+    <div class="q-hint">Be honest — this helps us price it right for you</div>
+    <div class="options" id="opts-s8">
+      <label class="opt"><span class="opt-radio"></span>I wouldn't pay — free only</label>
+      <label class="opt"><span class="opt-radio"></span>$5–10 / month</label>
+      <label class="opt"><span class="opt-radio"></span>$10–20 / month</label>
+      <label class="opt"><span class="opt-radio"></span>$20+ / month</label>
+    </div>
+    <div class="err" id="err-s8">Please select an option to continue.</div>
+    <button class="btn-primary" onclick="validateOpts('s8','s9',true)">Build My Plan →</button>
+    <button class="btn-back" onclick="goTo('s7')">← Back</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+  S9 — LOADER
+════════════════════════════════ -->
+<div class="screen" id="s9">
+  <div class="logo-wrap"><svg class="logo-sm" viewBox="0 0 160 44" fill="none"><rect width="44" height="44" rx="13" fill="#1a4a2e"/><path d="M22 9C22 9 13 20.5 13 26.5C13 31.194 17.029 35 22 35C26.971 35 31 31.194 31 26.5C31 20.5 22 9 22 9Z" fill="#52b788"/><path d="M19 30L22 26L25 30" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/><line x1="22" y1="26" x2="22" y2="21" stroke="white" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/><text x="54" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#1a4a2e">Diab</text><text x="101" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#52b788">Free</text></svg></div>
+  <div style="width:100%;max-width:520px;">
+    <div class="loader-title">Creating your</div>
+    <div class="loader-title"><span>personalised Diabetes</span></div>
+    <div class="loader-title"><span>Reversal Plan</span></div>
+    <div class="loader-steps">
+      <div class="loader-step">
+        <span class="loader-step-name">Setting blood sugar goals</span>
+        <div class="step-right">
+          <span class="step-pct" id="lp1">0%</span>
+          <div class="step-bar"><div class="step-fill" id="lb1"></div></div>
+          <div class="step-check" id="lc1">✓</div>
+        </div>
+      </div>
+      <div class="loader-step">
+        <span class="loader-step-name">Adapting meal preferences</span>
+        <div class="step-right">
+          <span class="step-pct" id="lp2">0%</span>
+          <div class="step-bar"><div class="step-fill" id="lb2"></div></div>
+          <div class="step-check" id="lc2">✓</div>
+        </div>
+      </div>
+      <div class="loader-step">
+        <span class="loader-step-name">Building reversal content</span>
+        <div class="step-right">
+          <span class="step-pct" id="lp3">0%</span>
+          <div class="step-bar"><div class="step-fill" id="lb3"></div></div>
+          <div class="step-check" id="lc3">✓</div>
+        </div>
+      </div>
+    </div>
+    <div class="review-card">
+      <div class="stars">★★★★★</div>
+      <div class="review-title" id="rev-title">It has really changed my life</div>
+      <div class="review-body" id="rev-body">I've been managing Type 2 for years with no real progress. This app gave me a clear plan — within 6 weeks my fasting glucose dropped significantly.</div>
+      <div class="review-author" id="rev-author">— Michael T., Texas</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+  S10 — GOAL CHART
+════════════════════════════════ -->
+<div class="screen" id="s10">
+  <div class="logo-wrap"><svg class="logo-sm" viewBox="0 0 160 44" fill="none"><rect width="44" height="44" rx="13" fill="#1a4a2e"/><path d="M22 9C22 9 13 20.5 13 26.5C13 31.194 17.029 35 22 35C26.971 35 31 31.194 31 26.5C31 20.5 22 9 22 9Z" fill="#52b788"/><path d="M19 30L22 26L25 30" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/><line x1="22" y1="26" x2="22" y2="21" stroke="white" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/><text x="54" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#1a4a2e">Diab</text><text x="101" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#52b788">Free</text></svg></div>
+  <div style="width:100%;max-width:520px;">
+    <div class="card">
+      <h2 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--green-deep);text-align:center;margin-bottom:6px;line-height:1.25;">A plan designed to support<br>your reversal journey</h2>
+      <p style="font-size:14px;color:var(--text-mid);text-align:center;margin-bottom:6px;">Based on your answers, we expect you to reach healthy blood sugar levels by</p>
+      <div id="goal-date" style="font-family:'Nunito',sans-serif;font-size:20px;font-weight:800;color:var(--green-deep);text-align:center;margin-bottom:24px;">June 2026</div>
+      <div class="chart-bars">
+        <div class="bar" style="height:28%;background:#ef9a9a;"></div>
+        <div class="bar" style="height:44%;background:#ffcc80;"></div>
+        <div class="bar" style="height:60%;background:#fff176;"></div>
+        <div class="bar" style="height:76%;background:#a5d6a7;position:relative;"><span class="bar-goal-tag">Goal</span></div>
+        <div class="bar" style="height:92%;background:#90caf9;"></div>
+      </div>
+      <div class="chart-months">
+        <div class="chart-month">Now</div>
+        <div class="chart-month" id="cm2"></div>
+        <div class="chart-month" id="cm3"></div>
+        <div class="chart-month" id="cm4"></div>
+        <div class="chart-month">Goal ✓</div>
+      </div>
+      <p style="font-size:11px;color:var(--text-light);text-align:center;margin-top:12px;font-style:italic;">This chart is a non-customised illustration and results may vary.</p>
+      <button class="btn-primary" onclick="goTo('s11')">See My Offer →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+  S11 — SCRATCH CARD
+════════════════════════════════ -->
+<div class="screen" id="s11">
+  <div class="logo-wrap"><svg class="logo-sm" viewBox="0 0 160 44" fill="none"><rect width="44" height="44" rx="13" fill="#1a4a2e"/><path d="M22 9C22 9 13 20.5 13 26.5C13 31.194 17.029 35 22 35C26.971 35 31 31.194 31 26.5C31 20.5 22 9 22 9Z" fill="#52b788"/><path d="M19 30L22 26L25 30" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/><line x1="22" y1="26" x2="22" y2="21" stroke="white" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/><text x="54" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#1a4a2e">Diab</text><text x="101" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#52b788">Free</text></svg></div>
+  <div style="width:100%;max-width:520px;text-align:center;">
+    <div style="display:inline-flex;align-items:center;gap:6px;background:var(--gold-pale);border:1px solid rgba(201,168,76,.3);border-radius:99px;padding:7px 16px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:var(--gold);margin-bottom:20px;">⭐ Claim Your Gift</div>
+    <h2 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--green-deep);line-height:1.3;margin-bottom:6px;"><span id="sc-name">Friend</span>,<br>Scratch &amp; save on your<br><span style="color:var(--green-light)">Diabetes Reversal Plan</span></h2>
+    <p style="font-size:14px;color:var(--text-mid);margin-bottom:24px;">A founding member reward, just for you 🌿</p>
+    <div class="scratch-card" id="scratch-card" onclick="revealScratch()">
+      <div class="scratch-overlay" id="scratch-overlay">
+        <div class="scratch-overlay-text">👆 Tap to reveal your discount</div>
+      </div>
+      <div>
+        <div class="scratch-pct">40%</div>
+        <div class="scratch-off">OFF</div>
+        <div class="scratch-detail">Your first 3 months as a founding member</div>
+      </div>
+    </div>
+    <button class="btn-primary" id="scratch-btn" onclick="goTo('s12')" style="display:none;">Reserve My Free Spot →</button>
+  </div>
+</div>
+
+<div class="confetti-wrap" id="confetti"></div>
+
+
+<!-- ════════════════════════════════
+  S12 — THANK YOU / LANDING PAGE
+════════════════════════════════ -->
+<div class="screen" id="s12">
+  <div class="logo-wrap">
+    <svg width="160" height="44" viewBox="0 0 160 44" fill="none">
+      <rect width="44" height="44" rx="13" fill="rgba(255,255,255,.1)"/>
+      <path d="M22 9C22 9 13 20.5 13 26.5C13 31.194 17.029 35 22 35C26.971 35 31 31.194 31 26.5C31 20.5 22 9 22 9Z" fill="#52b788"/>
+      <path d="M19 30L22 26L25 30" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/>
+      <line x1="22" y1="26" x2="22" y2="21" stroke="white" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/>
+      <text x="54" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="white">Diab</text>
+      <text x="101" y="30" font-family="Nunito,sans-serif" font-weight="800" font-size="22" fill="#52b788">Free</text>
+    </svg>
+  </div>
+
+  <div style="width:100%;max-width:520px;text-align:center;">
+    <div class="ty-badge"><span class="ty-check">✓</span>Your seat is reserved</div>
+
+    <h2 class="ty-title">Welcome, <em id="ty-name">friend</em>.<br>Your reversal starts here.</h2>
+
+    <p class="ty-sub">We're building the most personalised diabetes reversal app. We'll reach out at <strong style="color:rgba(255,255,255,.9)" id="ty-email"></strong> the moment we launch.</p>
+
+    <div class="ty-gift">🎁 <strong>Founding member benefit:</strong> Early access + 40% off your first 3 months.<br>Your spot is locked in — no credit card needed.</div>
+
+    <div class="waitlist-row">
+      <div class="av-stack">
+        <div class="av">👩</div><div class="av">👨</div><div class="av">👴</div><div class="av">👩‍🦳</div>
+      </div>
+      <div class="wl-text"><strong>500+ people</strong> already on the waitlist</div>
+    </div>
+
+    <div class="section-label">What's coming in the app</div>
+    <div class="features-grid">
+      <div class="feat-card">
+        <span class="feat-icon">🥗</span>
+        <div class="feat-title">Meal Plans</div>
+        <div class="feat-desc">Personalised to your condition, preferences, and food culture — Indian, Mediterranean &amp; American.</div>
+        <span class="feat-tag">Personalised</span>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">📊</span>
+        <div class="feat-title">Blood Sugar Tracker</div>
+        <div class="feat-desc">Log fasting and post-meal readings. See which foods spike your glucose in real time.</div>
+        <span class="feat-tag">Daily tracking</span>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">📈</span>
+        <div class="feat-title">Progress Analytics</div>
+        <div class="feat-desc">Weekly insights on your glucose trends, streaks, and how close you are to remission.</div>
+        <span class="feat-tag">Insights</span>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🔬</span>
+        <div class="feat-title">Glycemic Index Guide</div>
+        <div class="feat-desc">Every meal rated by blood sugar impact — know exactly what to eat freely and what to limit.</div>
+        <span class="feat-tag">Science-backed</span>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-item">
+        <span class="stat-num">46%</span>
+        <div class="stat-lbl">remission in<br>DiRECT trial</div>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">58%</span>
+        <div class="stat-lbl">reduction in T2D<br>progression</div>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">38M</span>
+        <div class="stat-lbl">Americans<br>with diabetes</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+let userName='friend', userEmail='';
+
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Age — auto-advance on tap
+function selectAge(el, next){
+  document.querySelectorAll('.age-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+  setTimeout(()=>goTo(next), 220);
+}
+
+// Radio options
+document.querySelectorAll('.options').forEach(g=>{
+  g.querySelectorAll('.opt').forEach(o=>{
+    o.addEventListener('click',()=>{
+      g.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));
+      o.classList.add('sel');
+    });
+  });
+});
+
+function validateOpts(sid, nid, startLoader){
+  const sel = document.querySelector('#'+sid+' .opt.sel');
+  if(!sel){ document.getElementById('err-'+sid).style.display='block'; return; }
+  document.getElementById('err-'+sid).style.display='none';
+  if(startLoader) runLoader();
+  goTo(nid);
+}
+
+// Contact
+function validateContact(){
+  const name  = document.getElementById('inp-name').value.trim();
+  const email = document.getElementById('inp-email').value.trim();
+  if(!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    document.getElementById('err-s6').style.display='block'; return;
+  }
+  document.getElementById('err-s6').style.display='none';
+  userName  = name.split(' ')[0];
+  userEmail = email;
+  // populate personalized fields
+  document.getElementById('sc-name').textContent  = userName;
+  document.getElementById('ty-name').textContent  = userName+' 👋';
+  document.getElementById('ty-email').textContent = email;
+  // goal date = 3 months out
+  const d=new Date(); d.setMonth(d.getMonth()+3);
+  const goalStr=d.toLocaleString('default',{month:'long',year:'numeric'});
+  document.getElementById('goal-date').textContent=goalStr;
+  // chart month labels
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const now=new Date();
+  document.getElementById('cm2').textContent=months[(now.getMonth()+1)%12];
+  document.getElementById('cm3').textContent=months[(now.getMonth()+2)%12];
+  document.getElementById('cm4').textContent=months[(now.getMonth()+3)%12];
+  goTo('s7');
+}
+
+// Loader
+const reviews=[
+  {t:"It has really changed my life",b:"I've been managing Type 2 for years with no real progress. This app gave me a clear plan — within 6 weeks my fasting glucose dropped significantly.",a:"— Michael T., Texas"},
+  {t:"Finally something that works",b:"I tried everything. The glycemic index guide alone changed how I eat. My doctor was shocked at my last A1C reading.",a:"— Anita R., California"},
+  {t:"Simple and genuinely helpful",b:"The meal plans are not restrictive at all. I eat things I enjoy and my blood sugar has never been this stable.",a:"— James K., Florida"}
+];
+let revIdx=0;
+
+function runLoader(){
+  animStep(1,1200,()=>{
+    doneStep(1);
+    setTimeout(()=>{
+      animStep(2,1400,()=>{
+        doneStep(2);
+        setTimeout(()=>{
+          animStep(3,1000,()=>{
+            doneStep(3);
+            setTimeout(()=>goTo('s10'),800);
+          });
+        },300);
+      });
+    },300);
+  });
+  const rot=setInterval(()=>{
+    revIdx=(revIdx+1)%reviews.length;
+    const r=reviews[revIdx];
+    document.getElementById('rev-title').textContent=r.t;
+    document.getElementById('rev-body').textContent=r.b;
+    document.getElementById('rev-author').textContent=r.a;
+  },1800);
+  setTimeout(()=>clearInterval(rot),5500);
+}
+
+function animStep(n,dur,cb){
+  const bar=document.getElementById('lb'+n);
+  const pct=document.getElementById('lp'+n);
+  const step=100/(dur/16); let v=0;
+  const iv=setInterval(()=>{
+    v=Math.min(v+step,100);
+    bar.style.width=v+'%';
+    pct.textContent=Math.round(v)+'%';
+    if(v>=100){clearInterval(iv);if(cb)cb();}
+  },16);
+}
+
+function doneStep(n){
+  document.getElementById('lp'+n).style.display='none';
+  document.getElementById('lb'+n).parentElement.style.display='none';
+  const c=document.getElementById('lc'+n);
+  c.style.display='flex';
+}
+
+// Scratch card
+function revealScratch(){
+  const ov=document.getElementById('scratch-overlay');
+  if(parseFloat(getComputedStyle(ov).opacity)===0) return;
+  ov.style.opacity='0';
+  ov.style.pointerEvents='none';
+  document.getElementById('scratch-btn').style.display='block';
+  launchConfetti();
+}
+
+function launchConfetti(){
+  const wrap=document.getElementById('confetti');
+  wrap.style.display='block';
+  const cols=['#52b788','#c9a84c','#1a4a2e','#d8f3dc','#faf7f2','#ff9800','#ef5350'];
+  for(let i=0;i<70;i++){
+    const p=document.createElement('div');
+    p.className='cp';
+    p.style.cssText=`left:${Math.random()*100}vw;top:-10px;background:${cols[Math.floor(Math.random()*cols.length)]};animation-delay:${Math.random()}s;transform:rotate(${Math.random()*360}deg);width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;`;
+    wrap.appendChild(p);
+  }
+  setTimeout(()=>{wrap.style.display='none';wrap.innerHTML='';},3000);
+}
+</script>
+</body>
+</html>
