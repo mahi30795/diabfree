@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50" fill="none">
+  <rect width="50" height="50" rx="13" fill="rgba(255,255,255,.1)" />
+  <g transform="translate(3 3)">
+    <path
+      d="M22 9C22 9 13 20.5 13 26.5C13 31.194 17.029 35 22 35C26.971 35 31 31.194 31 26.5C31 20.5 22 9 22 9Z"
+      fill="#52b788"
+    />
+    <path
+      d="M19 30L22 26L25 30"
+      stroke="white"
+      stroke-width="1.6"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      fill="none"
+      opacity="0.7"
+    />
+    <line
+      x1="22"
+      y1="26"
+      x2="22"
+      y2="21"
+      stroke="white"
+      stroke-width="1.6"
+      stroke-linecap="round"
+      opacity="0.7"
+    />
+  </g>
+</svg>
