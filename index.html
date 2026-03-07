@@ -637,6 +637,9 @@ body{font-family:'Lato',sans-serif;background:var(--cream);color:var(--text-dark
 <script>
 let userName = 'friend', userEmail = '';
 let selectedPersonaGender = '';
+const IDEMPOTENCY_STORAGE_KEY = 'diabfree_idempotency_key';
+const CAPTURE_SECTION_1 = 'section_1';
+const CAPTURE_SECTION_2 = 'section_2';
 
 // Replace with your deployed Cloudflare Worker URL.
 const WORKER_ENDPOINT = 'https://snowy-scene-b3a8.mahesh30795.workers.dev/';
@@ -726,7 +729,26 @@ function detectDeviceType() {
   return 'desktop';
 }
 
-function buildLeadPayload() {
+function generateIdempotencyKey() {
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+    return window.crypto.randomUUID();
+  }
+  return `idemp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function getIdempotencyKey() {
+  try {
+    const existing = sessionStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
+    if (existing) return existing;
+    const created = generateIdempotencyKey();
+    sessionStorage.setItem(IDEMPOTENCY_STORAGE_KEY, created);
+    return created;
+  } catch (_) {
+    return generateIdempotencyKey();
+  }
+}
+
+function buildLeadPayloadSection1() {
   const fullName = document.getElementById('inp-name').value.trim();
   const email = document.getElementById('inp-email').value.trim();
   const firstName = fullName ? fullName.split(' ')[0] : '';
@@ -735,18 +757,28 @@ function buildLeadPayload() {
   const ageLabel = selectedAge ? selectedAge.textContent.trim() : '';
   const profileLabel = selectedSingleText('opts-s3');
   const challengeLabels = selectedMultiTexts('opts-s4');
-  const priceLabel = selectedSingleText('opts-s8');
-
-  const params = new URLSearchParams(window.location.search);
 
   return {
+    idempotency_key: getIdempotencyKey(),
+    capture_section: CAPTURE_SECTION_1,
     full_name: fullName,
     first_name: firstName,
     email,
+    email1: email,
     persona_gender: selectedPersonaGender || '',
     age_range: mapAgeRange(ageLabel),
     diabetes_profile: mapDiabetesProfile(profileLabel),
-    biggest_challenges: mapChallenges(challengeLabels),
+    biggest_challenges: mapChallenges(challengeLabels)
+  };
+}
+
+function buildLeadPayloadSection2() {
+  const priceLabel = selectedSingleText('opts-s8');
+  const params = new URLSearchParams(window.location.search);
+
+  return {
+    idempotency_key: getIdempotencyKey(),
+    capture_section: CAPTURE_SECTION_2,
     price_willingness: mapPriceWillingness(priceLabel),
     source_page: `${window.location.pathname}${window.location.search}`,
     utm_source: params.get('utm_source') || '',
@@ -791,7 +823,7 @@ async function submitQuizAndContinue() {
   }
 
   document.getElementById('err-s8').style.display = 'none';
-  const payload = buildLeadPayload();
+  const payload = buildLeadPayloadSection2();
   await postLeadToWorker(payload);
   goTo('s10');
 }
@@ -900,7 +932,7 @@ function validateMulti(sid, nid) {
 }
 
 // Contact
-function validateContact() {
+async function validateContact() {
   const name  = document.getElementById('inp-name').value.trim();
   const email = document.getElementById('inp-email').value.trim();
   if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -912,6 +944,10 @@ function validateContact() {
   document.getElementById('sc-name').textContent  = userName;
   document.getElementById('ty-name').textContent  = userName + ' 👋';
   document.getElementById('ty-email').textContent = email;
+
+  const payload = buildLeadPayloadSection1();
+  await postLeadToWorker(payload);
+
   goTo('s7');
 }
 
