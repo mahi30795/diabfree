@@ -638,14 +638,18 @@ body{font-family:'Lato',sans-serif;background:var(--cream);color:var(--text-dark
 let userName = 'friend', userEmail = '';
 let selectedPersonaGender = '';
 const IDEMPOTENCY_STORAGE_KEY = 'diabfree_idempotency_key';
-const CAPTURE_SECTION_1 = 'section_1';
-const CAPTURE_SECTION_2 = 'section_2';
+const CAPTURE_STREAM = 'quiz_serial_v1';
+let captureSequence = 0;
+let captureQueue = Promise.resolve();
 
 // Replace with your deployed Cloudflare Worker URL.
 const WORKER_ENDPOINT = 'https://snowy-scene-b3a8.mahesh30795.workers.dev/';
 
 function selectPersona(gender, next) {
   selectedPersonaGender = gender;
+  queueCaptureEvent('persona_gender', gender, {
+    answer_label: gender
+  });
   goTo(next);
 }
 
@@ -748,38 +752,10 @@ function getIdempotencyKey() {
   }
 }
 
-function buildLeadPayloadSection1() {
-  const fullName = document.getElementById('inp-name').value.trim();
-  const email = document.getElementById('inp-email').value.trim();
-  const firstName = fullName ? fullName.split(' ')[0] : '';
-
-  const selectedAge = document.querySelector('#opts-s2 .age-opt.sel');
-  const ageLabel = selectedAge ? selectedAge.textContent.trim() : '';
-  const profileLabel = selectedSingleText('opts-s3');
-  const challengeLabels = selectedMultiTexts('opts-s4');
-
-  return {
-    idempotency_key: getIdempotencyKey(),
-    capture_section: CAPTURE_SECTION_1,
-    full_name: fullName,
-    first_name: firstName,
-    email,
-    email1: email,
-    persona_gender: selectedPersonaGender || '',
-    age_range: mapAgeRange(ageLabel),
-    diabetes_profile: mapDiabetesProfile(profileLabel),
-    biggest_challenges: mapChallenges(challengeLabels)
-  };
-}
-
-function buildLeadPayloadSection2() {
-  const priceLabel = selectedSingleText('opts-s8');
+function buildCaptureContext() {
   const params = new URLSearchParams(window.location.search);
 
   return {
-    idempotency_key: getIdempotencyKey(),
-    capture_section: CAPTURE_SECTION_2,
-    price_willingness: mapPriceWillingness(priceLabel),
     source_page: `${window.location.pathname}${window.location.search}`,
     utm_source: params.get('utm_source') || '',
     utm_medium: params.get('utm_medium') || '',
@@ -791,6 +767,30 @@ function buildLeadPayloadSection2() {
     consent_marketing: true,
     consent_privacy_policy: true
   };
+}
+
+function buildCapturePayload(questionKey, answerValue, extra = {}) {
+  captureSequence += 1;
+  return {
+    idempotency_key: getIdempotencyKey(),
+    capture_stream: CAPTURE_STREAM,
+    capture_seq: captureSequence,
+    question_key: questionKey,
+    answer_value: answerValue,
+    answered_at: new Date().toISOString(),
+    ...buildCaptureContext(),
+    ...extra
+  };
+}
+
+function queueCaptureEvent(questionKey, answerValue, extra = {}) {
+  const payload = buildCapturePayload(questionKey, answerValue, extra);
+  captureQueue = captureQueue
+    .then(() => postLeadToWorker(payload))
+    .catch((error) => {
+      console.error('Queued capture failed:', error);
+    });
+  return captureQueue;
 }
 
 async function postLeadToWorker(payload) {
@@ -823,8 +823,10 @@ async function submitQuizAndContinue() {
   }
 
   document.getElementById('err-s8').style.display = 'none';
-  const payload = buildLeadPayloadSection2();
-  await postLeadToWorker(payload);
+  const priceLabel = selectedSingleText('opts-s8');
+  await queueCaptureEvent('price_willingness', mapPriceWillingness(priceLabel), {
+    answer_label: priceLabel
+  });
   goTo('s10');
 }
 
@@ -893,6 +895,10 @@ function countUp(id, from, to, duration, suffix) {
 function selectAge(el, next) {
   document.querySelectorAll('.age-opt').forEach(o => o.classList.remove('sel'));
   el.classList.add('sel');
+  const ageLabel = el.textContent.trim();
+  queueCaptureEvent('age_range', mapAgeRange(ageLabel), {
+    answer_label: ageLabel
+  });
   setTimeout(() => goTo(next), 220);
 }
 
@@ -919,6 +925,14 @@ function validateOpts(sid, nid, startLoader) {
   const sel = document.querySelector('#' + sid + ' .opt.sel');
   if (!sel) { document.getElementById('err-' + sid).style.display = 'block'; return; }
   document.getElementById('err-' + sid).style.display = 'none';
+
+  if (sid === 's3') {
+    const profileLabel = selectedSingleText('opts-s3');
+    queueCaptureEvent('diabetes_profile', mapDiabetesProfile(profileLabel), {
+      answer_label: profileLabel
+    });
+  }
+
   if (startLoader) runLoader();
   goTo(nid);
 }
@@ -928,6 +942,14 @@ function validateMulti(sid, nid) {
   const sels = document.querySelectorAll('#' + sid + ' .opt.sel');
   if (sels.length === 0) { document.getElementById('err-' + sid).style.display = 'block'; return; }
   document.getElementById('err-' + sid).style.display = 'none';
+
+  if (sid === 's4') {
+    const challengeLabels = selectedMultiTexts('opts-s4');
+    queueCaptureEvent('biggest_challenges', mapChallenges(challengeLabels), {
+      answer_label: challengeLabels
+    });
+  }
+
   goTo(nid);
 }
 
@@ -945,8 +967,12 @@ async function validateContact() {
   document.getElementById('ty-name').textContent  = userName + ' 👋';
   document.getElementById('ty-email').textContent = email;
 
-  const payload = buildLeadPayloadSection1();
-  await postLeadToWorker(payload);
+  await queueCaptureEvent('contact', {
+    full_name: name,
+    first_name: userName,
+    email,
+    email1: email
+  });
 
   goTo('s7');
 }
